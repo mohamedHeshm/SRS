@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار Supabase</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        h1 { color: #2563eb; margin-bottom: 1.5rem; text-align: center; }
+        .test-item {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            background: #f8fafc;
+            border-left: 4px solid #e2e8f0;
+        }
+        .test-item.pass { border-left-color: #22c55e; background: #f0fdf4; }
+        .test-item.fail { border-left-color: #ef4444; background: #fef2f2; }
+        .test-item.pending { border-left-color: #f59e0b; background: #fffbeb; }
+
+        .test-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .test-label .icon { font-size: 20px; }
+        .test-result {
+            font-size: 13px;
+            color: #475569;
+            margin-top: 8px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+
+        .button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-family: inherit;
+            width: 100%;
+            margin-top: 1rem;
+            transition: background 0.3s;
+        }
+        .button:hover { background: #1e40af; }
+        .button:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+        }
+
+        .summary {
+            background: #f0fdf4;
+            border: 2px solid #22c55e;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 1.5rem;
+            text-align: center;
+        }
+        .summary.error {
+            background: #fef2f2;
+            border-color: #ef4444;
+        }
+        .summary p {
+            margin: 8px 0;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🧪 اختبار Supabase</h1>
+
+    <div id="testsContainer"></div>
+
+    <button class="button" onclick="runTests()">🚀 تشغيل الاختبارات</button>
+    <button class="button" style="background: #6b7280; margin-top: 0.5rem;" onclick="clearTests()">🧹 مسح</button>
+
+    <div id="summary"></div>
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://vvdvnlfaqjmtivocxmbu.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2ZHZubGZhcWptdGl2b2N4YnUiLCJyb2xlIjoiYW9uIiwiaWF0IjoxNzIwMDAwMDAwLCJleHAiOjE4OTk5OTk5OTl9.MOCK_KEY';
+
+    let tests = [];
+
+    function addTest(name, status, result = '') {
+        tests.push({ name, status, result });
+        renderTests();
+    }
+
+    function renderTests() {
+        const container = document.getElementById('testsContainer');
+        container.innerHTML = tests.map((test, i) => `
+            <div class="test-item ${test.status}">
+                <div class="test-label">
+                    <span class="icon">
+                        ${test.status === 'pass' ? '✅' : test.status === 'fail' ? '❌' : '⏳'}
+                    </span>
+                    <span>${test.name}</span>
+                </div>
+                ${test.result ? `<div class="test-result">${test.result}</div>` : ''}
+            </div>
+        `).join('');
+
+        // الملخص
+        const passed = tests.filter(t => t.status === 'pass').length;
+        const failed = tests.filter(t => t.status === 'fail').length;
+        const total = tests.length;
+
+        if (total > 0) {
+            const summary = document.getElementById('summary');
+            const isSuccess = failed === 0;
+            summary.className = `summary ${isSuccess ? '' : 'error'}`;
+            summary.innerHTML = `
+                <p>📊 النتيجة: <strong>${passed}/${total}</strong> اختبارات نجحت</p>
+                ${isSuccess ?
+                    '<p style="color: #22c55e; font-size: 18px;">🎉 كل شيء يعمل بشكل صحيح!</p>' :
+                    `<p style="color: #ef4444;">⚠️ هناك ${failed} اختبارات فشلت</p>
+                    <p style="font-size: 13px; margin-top: 12px;">اقرأ TROUBLESHOOTING.md للحل</p>`
+                }
+            `;
+        }
+    }
+
+    function clearTests() {
+        tests = [];
+        document.getElementById('testsContainer').innerHTML = '';
+        document.getElementById('summary').innerHTML = '';
+    }
+
+    async function runTests() {
+        clearTests();
+
+        // Test 1: Supabase Library
+        try {
+            if (window.supabase) {
+                addTest('مكتبة Supabase', 'pass', 'تم تحميل المكتبة بنجاح');
+            } else {
+                addTest('مكتبة Supabase', 'fail', 'لم يتم تحميل المكتبة');
+                return;
+            }
+        } catch (e) {
+            addTest('مكتبة Supabase', 'fail', e.message);
+            return;
+        }
+
+        // Test 2: URL
+        if (SUPABASE_URL && SUPABASE_URL.includes('.supabase.co')) {
+            addTest('Supabase URL', 'pass', SUPABASE_URL.substring(0, 40) + '...');
+        } else {
+            addTest('Supabase URL', 'fail', 'URL غير صحيح أو ناقص');
+        }
+
+        // Test 3: Key
+        if (SUPABASE_ANON_KEY && SUPABASE_ANON_KEY.length > 50) {
+            addTest('Supabase Key', 'pass', 'المفتاح موجود وطويل');
+        } else {
+            addTest('Supabase Key', 'fail', 'المفتاح غير صحيح أو قصير جداً');
+        }
+
+        // Test 4: Initialize Supabase
+        let supabase;
+        try {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            addTest('تهيئة Supabase', 'pass', 'تم الاتصال بنجاح');
+        } catch (e) {
+            addTest('تهيئة Supabase', 'fail', e.message);
+            return;
+        }
+
+        // Test 5: Check Auth Status
+        addTest('فحص الجلسة', 'pending', 'جارٍ الفحص...');
+        try {
+            const { data, error } = await supabase.auth.getSession();
+            if (error) {
+                addTest('فحص الجلسة', 'fail', error.message);
+            } else if (data?.session) {
+                addTest('فحص الجلسة', 'pass', `المستخدم مسجل: ${data.session.user.email}`);
+            } else {
+                addTest('فحص الجلسة', 'pass', 'لا يوجد جلسة حالية (طبيعي)');
+            }
+        } catch (e) {
+            addTest('فحص الجلسة', 'fail', e.message);
+        }
+
+        // Test 6: Test Connection
+        addTest('اختبار الاتصال', 'pending', 'جارٍ الاختبار...');
+        try {
+            const { count, error } = await supabase
+                .from('profiles')
+                .select('*', { count: 'exact', head: true });
+
+            if (error) {
+                if (error.code === '42501') {
+                    addTest('اختبار الاتصال', 'fail', 'مشكلة في الأصلاحيات (RLS)');
+                } else {
+                    addTest('اختبار الاتصال', 'fail', error.message);
+                }
+            } else {
+                addTest('اختبار الاتصال', 'pass', `تم الاتصال بـ ${count || 0} سجلات`);
+            }
+        } catch (e) {
+            addTest('اختبار الاتصال', 'fail', e.message);
+        }
+
+        // Test 7: Check Profiles Table
+        addTest('جدول Profiles', 'pending', 'جارٍ الفحص...');
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .select('*')
+                .limit(1);
+
+            if (error && error.code === '42501') {
+                addTest('جدول Profiles', 'fail', 'RLS منع الوصول - شغّل FIX_RLS.sql');
+            } else if (error) {
+                addTest('جدول Profiles', 'fail', error.message);
+            } else {
+                addTest('جدول Profiles', 'pass', 'الجدول موجود وآمن');
+            }
+        } catch (e) {
+            addTest('جدول Profiles', 'fail', e.message);
+        }
+    }
+
+    // تشغيل الاختبارات عند التحميل
+    window.addEventListener('load', () => {
+        // لا تشغّل تلقائياً - انتظر النقر
+    });
+</script>
+</body>
+</html>c
