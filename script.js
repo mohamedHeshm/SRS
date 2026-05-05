@@ -3,8 +3,8 @@
    ======================================== */
 
 // ⚠️ استبدل هذه القيم ببيانات Supabase الخاصة بك
-const SUPABASE_URL = 'https://your-project.supabase.co';
-const SUPABASE_ANON_KEY = 'your-anon-key';
+const SUPABASE_URL = 'https://vvdvnlfaqjmtivocxmbu.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_Ye4vFPVmdCQJI1IgEFZX6Q_1rTl59QA';
 
 let supabase;
 
