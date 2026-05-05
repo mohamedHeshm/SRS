@@ -6,7 +6,6 @@
 const SUPABASE_URL = 'https://vvdvnlfaqjmtivocxmbu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_Ye4vFPVmdCQJI1IgEFZX6Q_1rTl59QA';
 
-let supabase;
 
 // تهيئة Supabase
 if (typeof window !== 'undefined' && window.supabase) {
