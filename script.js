@@ -1,15 +1,10 @@
-const SUPABASE_URL = 'https://vvdvnlfaqjmtivocxmbu.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_Ye4vFPVmdCQJI1IgEFZX6Q_1rTl59QA';
+const SUPABASE_URL = 'https://vvdvnlfaqjmtivocxmbu.supabase.co/rest/v1/';
+const SUPABASE_ANON_KEY = 'ssb_publishable_Ye4vFPVmdCQJI1IgEFZX6Q_1rTl59QA';
 
-// تهيئة Supabase
 let supabase = null;
 if (typeof window !== 'undefined' && window.supabase) {
     supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
-
-/* ========================================
-   CACHE SYSTEM - نظام تخزين مؤقت
-   ======================================== */
 
 const cacheSystem = {
     data: {},
@@ -133,14 +128,25 @@ async function getCurrentUser() {
     const cached = cacheSystem.get('currentUser');
     if (cached) return cached;
 
-    const { data, error } = await supabase.auth.getSession();
-    const user = data?.session?.user || null;
+    try {
+        const { data: { session }, error } = await supabase.auth.getSession();
 
-    if (user) {
-        cacheSystem.set('currentUser', user);
+        if (error) {
+            console.error('خطأ في جلب الجلسة:', error);
+            return null;
+        }
+
+        const user = session?.user || null;
+
+        if (user) {
+            cacheSystem.set('currentUser', user);
+        }
+
+        return user;
+    } catch (error) {
+        console.error('خطأ في getCurrentUser:', error);
+        return null;
     }
-
-    return user;
 }
 
 /**
@@ -588,16 +594,19 @@ function displayDashboardData(data, user) {
 }
 
 // تحميل البيانات عند فتح الصفحة
+// تحميل البيانات عند فتح الصفحة
 if (window.location.pathname.includes('dashboard')) {
     loadDashboardData();
 
-    // تحديث البيانات كل 30 ثانية (بدلاً من 30000ms)
-    setInterval(() => {
-        cacheSystem.clear(`dashboard_${getCurrentUser().then(u => u?.id)}`);
-        loadDashboardData();
+    // تحديث البيانات كل 30 ثانية
+    setInterval(async () => {
+        const user = await getCurrentUser();
+        if (user && user.id) {
+            cacheSystem.clear(`dashboard_${user.id}`);
+            loadDashboardData();
+        }
     }, 30000);
 }
-
 /* ========================================
    INITIALIZATION
    ======================================== */
