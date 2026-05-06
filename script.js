@@ -130,6 +130,12 @@ if (signupForm) {
     signupForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
+        // مسح الأخطاء السابقة
+        document.getElementById('businessNameError').textContent = '';
+        document.getElementById('emailError').textContent = '';
+        document.getElementById('subdomainError').textContent = '';
+        document.getElementById('passwordError').textContent = '';
+
         const businessName = document.getElementById('businessName').value.trim();
         const email = document.getElementById('email').value.trim();
         const phone = document.getElementById('phone').value.trim();
@@ -191,6 +197,16 @@ if (signupForm) {
                 return;
             }
 
+            // التحقق من وجود جلسة (إذا كان التأكيد مطلوباً)
+            if (!data.session) {
+                console.log('تم إرسال رابط التأكيد');
+                showToast('تم إرسال رابط التأكيد إلى بريدك الإلكتروني. يرجى تأكيد البريد الإلكتروني قبل تسجيل الدخول.', 'info');
+                btnText.style.display = 'inline-flex';
+                btnLoader.style.display = 'none';
+                signupBtn.disabled = false;
+                return;
+            }
+
             console.log('تم إنشاء الحساب بنجاح:', data.user.id);
 
             // 2. حفظ البيانات في جدول profiles
@@ -243,6 +259,10 @@ if (loginForm) {
 
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+
+        // مسح الأخطاء السابقة
+        document.getElementById('loginEmailError').textContent = '';
+        document.getElementById('loginPasswordError').textContent = '';
 
         const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value;
