@@ -1,4 +1,4 @@
-# 🚀 منصة بيزنس برو - ERP System
+# 🚀 منصة GOLDEN PASS - ERP System
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](package.json)
@@ -405,7 +405,7 @@ of this software...
 
 ### الفريق:
 - **مؤسس**: أحمد محمد
-- **المطورين**: فريق بيزنس برو
+- **المطورين**: فريق GOLDEN PASS
 - **التصميم**: فاطمة علي
 
 ### وسائل التواصل:
@@ -429,7 +429,7 @@ of this software...
 
 ---
 
-**صُنع بـ ❤️ بواسطة فريق بيزنس برو**
+**صُنع بـ ❤️ بواسطة فريق GOLDEN PASS**
 
 ---
 

@@ -333,7 +333,7 @@ function toggleForms() {
             authSubtitle.textContent = 'أهلاً بعودتك';
         } else {
             authTitle.textContent = 'إنشاء حساب جديد';
-            authSubtitle.textContent = 'ابدأ رحلتك مع بيزنس برو';
+            authSubtitle.textContent = 'ابدأ رحلتك مع GOLDEN PASS';
         }
     }
 }
