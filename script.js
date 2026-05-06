@@ -279,14 +279,22 @@ async function loadDashboardData() {
     try {
         const [profileRes, salesRes, customerRes, productRes] = await Promise.all([
             supabaseClient.from('profiles').select('business_name').eq('id', user.id).single(),
-            supabaseClient.from('sales').select('amount').eq('user_id', user.id),
+            supabaseClient.from('sales').select('total_amount, created_at, payment_status, customers(name)').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
             supabaseClient.from('customers').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
             supabaseClient.from('products').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
         ]);
 
+        // Log warnings for missing tables without crashing
+        if (profileRes.error)  console.warn('profiles table:', profileRes.error.message);
+        if (salesRes.error)    console.warn('sales table:', salesRes.error.message);
+        if (customerRes.error) console.warn('customers table:', customerRes.error.message);
+        if (productRes.error)  console.warn('products table:', productRes.error.message);
+
         const data = {
-            profile: profileRes.data, salesData: salesRes.data || [],
-            customerCount: customerRes.count || 0, productCount: productRes.count || 0,
+            profile:       profileRes.data   || null,
+            salesData:     salesRes.data     || [],
+            customerCount: customerRes.count || 0,
+            productCount:  productRes.count  || 0,
         };
         cacheSystem.set(`dashboard_${user.id}`, data);
         displayDashboardData(data);
@@ -303,11 +311,30 @@ function displayDashboardData(data) {
         setText('userName', name);
         setText('userInitial', name.charAt(0).toUpperCase());
     }
-    const totalSales = data.salesData.reduce((sum, s) => sum + (s.amount || 0), 0);
+    const totalSales = data.salesData.reduce((sum, s) => sum + (s.total_amount || 0), 0);
     setText('totalSales',     `${totalSales.toLocaleString('ar-EG')} ج.م`);
     setText('totalCustomers', data.customerCount);
     setText('totalProducts',  data.productCount);
     setText('totalProfit',    `${(totalSales * 0.3).toLocaleString('ar-EG')} ج.م`);
+
+    // Render recent sales table
+    const tbody = document.getElementById('recentSalesBody');
+    if (tbody && data.salesData.length > 0) {
+        const statusMap = { paid: 'مدفوع', unpaid: 'غير مدفوع', partial: 'جزئي' };
+        const statusClass = { paid: 'positive', unpaid: 'negative', partial: 'neutral' };
+        tbody.innerHTML = data.salesData.map(s => {
+            const date = new Date(s.created_at).toLocaleDateString('ar-EG');
+            const status = s.payment_status || 'unpaid';
+            const customerName = s.customers?.name || '—';
+            return `<tr>
+                <td>${customerName}</td>
+                <td>—</td>
+                <td>${(s.total_amount || 0).toLocaleString('ar-EG')} ج.م</td>
+                <td>${date}</td>
+                <td><span class="stat-change ${statusClass[status] || 'neutral'}">${statusMap[status] || status}</span></td>
+            </tr>`;
+        }).join('');
+    }
 }
 
 function displayDemoData() {
