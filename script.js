@@ -1,18 +1,13 @@
-// ========================================
-// تكوين Supabase
-// ========================================
+
 const SUPABASE_URL = 'https://vvdvnlfaqjmtivocxmbu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_Ye4vFPVmdCQJI1IgEFZX6Q_1rTl59QA';
 
-// تهيئة Supabase
+
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// التحقق من التهيئة
+
 console.log('Supabase initialized:', supabase ? '✅' : '❌');
 
-/* ========================================
-   CACHE SYSTEM
-   ======================================== */
 const cacheSystem = {
     data: {},
     timestamps: {},
@@ -45,9 +40,7 @@ const cacheSystem = {
     }
 };
 
-/* ========================================
-   UTILITY FUNCTIONS
-   ======================================== */
+
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
     if (!toast) return;
@@ -92,9 +85,7 @@ async function checkAuth() {
     return user;
 }
 
-/* ========================================
-   MOBILE MENU
-   ======================================== */
+
 const mobileMenuToggle = document.getElementById('mobileMenuToggle');
 const navbarMenu = document.getElementById('navbarMenu');
 
@@ -111,9 +102,6 @@ if (mobileMenuToggle && navbarMenu) {
     });
 }
 
-/* ========================================
-   AUTH PAGE - SIGNUP (محسن)
-   ======================================== */
 const signupForm = document.getElementById('signupForm');
 const loginForm = document.getElementById('loginForm');
 
@@ -130,7 +118,6 @@ if (signupForm) {
     signupForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        // مسح الأخطاء السابقة
         document.getElementById('businessNameError').textContent = '';
         document.getElementById('emailError').textContent = '';
         document.getElementById('subdomainError').textContent = '';
@@ -173,7 +160,6 @@ if (signupForm) {
         try {
             console.log('جاري إنشاء الحساب لـ:', email);
 
-            // 1. إنشاء حساب في Auth
             const { data, error } = await supabase.auth.signUp({
                 email,
                 password,
@@ -197,7 +183,7 @@ if (signupForm) {
                 return;
             }
 
-            // التحقق من وجود جلسة (إذا كان التأكيد مطلوباً)
+
             if (!data.session) {
                 console.log('تم إرسال رابط التأكيد');
                 showToast('تم إرسال رابط التأكيد إلى بريدك الإلكتروني. يرجى تأكيد البريد الإلكتروني قبل تسجيل الدخول.', 'info');
@@ -209,7 +195,6 @@ if (signupForm) {
 
             console.log('تم إنشاء الحساب بنجاح:', data.user.id);
 
-            // 2. حفظ البيانات في جدول profiles
             const { error: profileError } = await supabase
                 .from('profiles')
                 .insert({
@@ -244,9 +229,7 @@ if (signupForm) {
     });
 }
 
-/* ========================================
-   AUTH PAGE - LOGIN
-   ======================================== */
+
 if (loginForm) {
     const toggleLoginPasswordBtn = document.getElementById('toggleLoginPassword');
     if (toggleLoginPasswordBtn) {
@@ -260,7 +243,7 @@ if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        // مسح الأخطاء السابقة
+
         document.getElementById('loginEmailError').textContent = '';
         document.getElementById('loginPasswordError').textContent = '';
 
@@ -338,9 +321,6 @@ function toggleForms() {
     }
 }
 
-/* ========================================
-   DASHBOARD
-   ======================================== */
 const sidebarToggle = document.getElementById('sidebarToggle');
 const sidebar = document.getElementById('sidebar');
 const logoutBtn = document.getElementById('logoutBtn');
@@ -463,7 +443,6 @@ function displayDemoData() {
     document.getElementById('totalProfit').textContent = '0 ر.س';
 }
 
-// تشغيل لوحة التحكم
 if (window.location.pathname.includes('dashboard')) {
     loadDashboardData();
 }
