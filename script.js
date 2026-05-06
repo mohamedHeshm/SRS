@@ -7,6 +7,9 @@ if (typeof window !== 'undefined' && window.supabase) {
     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
+// إنشاء alias للاستخدام في باقي الكود
+const supabase = supabaseClient;
+
 const cacheSystem = {
     data: {},
     timestamps: {},
