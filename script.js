@@ -6,16 +6,16 @@
 const SUPABASE_URL      = 'https://vvdvnlfaqjmtivocxmbu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_Ye4vFPVmdCQJI1IgEFZX6Q_1rTl59QA';
 
-let supabase = null;
+let supabaseClient = null;
 
 function initSupabase() {
     if (typeof window.supabase === 'undefined' || !window.supabase.createClient) {
         console.warn('Supabase library not loaded');
         return false;
     }
-    if (!supabase) {
-        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        console.log('Supabase initialized:', supabase ? 'OK' : 'FAIL');
+    if (!supabaseClient) {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log("Supabase initialized:", supabaseClient ? 'OK' : 'FAIL');
     }
     return true;
 }
@@ -68,11 +68,11 @@ function setText(id, value) { const el = document.getElementById(id); if (el) el
 
 // ── Auth helpers ──────────────────────────────────────────
 async function getCurrentUser() {
-    if (!supabase) return null;
+    if (!supabaseClient) return null;
     const cached = cacheSystem.get('currentUser');
     if (cached) return cached;
     try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabaseClient.auth.getSession();
         if (error) return null;
         const user = session?.user || null;
         if (user) cacheSystem.set('currentUser', user);
@@ -164,13 +164,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (!password || !isStrongPassword(password)) { setText('passwordError', 'كلمة مرور قوية مطلوبة (8 أحرف على الأقل)'); hasErrors = true; }
                 if (hasErrors) return;
 
-                if (!supabase) { showToast('خطأ في الاتصال بالخادم، أعد تحميل الصفحة', 'error'); return; }
+                if (!supabaseClient) { showToast('خطأ في الاتصال بالخادم، أعد تحميل الصفحة', 'error'); return; }
 
                 const signupBtn = document.getElementById('signupBtn');
                 setButtonLoading(signupBtn, true);
 
                 try {
-                    const { data, error } = await supabase.auth.signUp({ email, password });
+                    const { data, error } = await supabaseClient.auth.signUp({ email, password });
                     if (error) { showToast(error.message, 'error'); setButtonLoading(signupBtn, false); return; }
                     if (!data.user) { showToast('حدث خطأ غير متوقع، حاول مرة أخرى', 'error'); setButtonLoading(signupBtn, false); return; }
 
@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         return;
                     }
 
-                    const { error: profileError } = await supabase.from('profiles').insert({
+                    const { error: profileError } = await supabaseClient.from('profiles').insert({
                         id: data.user.id, business_name: businessName, email, phone, subdomain
                     });
                     if (profileError) console.error('profile error:', profileError);
@@ -210,13 +210,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (!email || !isValidEmail(email)) { setText('loginEmailError', 'بريد إلكتروني صحيح مطلوب'); return; }
                 if (!password) { setText('loginPasswordError', 'كلمة المرور مطلوبة'); return; }
 
-                if (!supabase) { showToast('خطأ في الاتصال بالخادم، أعد تحميل الصفحة', 'error'); return; }
+                if (!supabaseClient) { showToast('خطأ في الاتصال بالخادم، أعد تحميل الصفحة', 'error'); return; }
 
                 const loginBtn = document.getElementById('loginBtn');
                 setButtonLoading(loginBtn, true);
 
                 try {
-                    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
                     if (error) { showToast(error.message, 'error'); setButtonLoading(loginBtn, false); return; }
 
                     cacheSystem.clearAll();
@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', async () => {
-                if (supabase) await supabase.auth.signOut();
+                if (supabaseClient) await supabaseClient.auth.signOut();
                 cacheSystem.clearAll();
                 showToast('تم تسجيل الخروج بنجاح', 'success');
                 setTimeout(() => { window.location.href = 'index.html'; }, 1500);
@@ -278,10 +278,10 @@ async function loadDashboardData() {
 
     try {
         const [profileRes, salesRes, customerRes, productRes] = await Promise.all([
-            supabase.from('profiles').select('business_name').eq('id', user.id).single(),
-            supabase.from('sales').select('amount').eq('user_id', user.id),
-            supabase.from('customers').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
-            supabase.from('products').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+            supabaseClient.from('profiles').select('business_name').eq('id', user.id).single(),
+            supabaseClient.from('sales').select('amount').eq('user_id', user.id),
+            supabaseClient.from('customers').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+            supabaseClient.from('products').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
         ]);
 
         const data = {
