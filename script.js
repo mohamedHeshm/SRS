@@ -1,9 +1,10 @@
-const SUPABASE_URL = 'https://vvdvnlfaqjmtivocxmbu.supabase.co/rest/v1/';
-const SUPABASE_ANON_KEY = 'ssb_publishable_Ye4vFPVmdCQJI1IgEFZX6Q_1rTl59QA';
+const SUPABASE_URL = 'https://vvdvnlfaqjmtivocxmbu.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_Ye4vFPVmdCQJI1IgEFZX6Q_1rTl59QA';
 
-let supabase = null;
+// تهيئة Supabase - تجنب التصريح المزدوج
+let supabaseClient = null;
 if (typeof window !== 'undefined' && window.supabase) {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
 const cacheSystem = {
