@@ -112,7 +112,7 @@ if (mobileMenuToggle && navbarMenu) {
 }
 
 /* ========================================
-   AUTH PAGE - SIGNUP
+   AUTH PAGE - SIGNUP (محسن)
    ======================================== */
 const signupForm = document.getElementById('signupForm');
 const loginForm = document.getElementById('loginForm');
@@ -167,45 +167,46 @@ if (signupForm) {
         try {
             console.log('جاري إنشاء الحساب لـ:', email);
 
+            // 1. إنشاء حساب في Auth
             const { data, error } = await supabase.auth.signUp({
                 email,
                 password,
-                options: {
-                    data: {
-                        business_name: businessName,
-                        phone: phone,
-                        subdomain: subdomain
-                    }
-                }
             });
 
             if (error) {
                 console.error('خطأ في التسجيل:', error);
-                showToast(`خطأ: ${error.message}`, 'error');
+                showToast(error.message, 'error');
                 btnText.style.display = 'inline-flex';
                 btnLoader.style.display = 'none';
                 signupBtn.disabled = false;
                 return;
             }
 
-            console.log('تم إنشاء الحساب بنجاح:', data.user?.id);
+            if (!data.user) {
+                console.error('لم يتم إنشاء المستخدم');
+                showToast('حدث خطأ غير متوقع', 'error');
+                btnText.style.display = 'inline-flex';
+                btnLoader.style.display = 'none';
+                signupBtn.disabled = false;
+                return;
+            }
 
-            const user = data.user;
+            console.log('تم إنشاء الحساب بنجاح:', data.user.id);
 
-            // حفظ البيانات في جدول profiles
+            // 2. حفظ البيانات في جدول profiles
             const { error: profileError } = await supabase
                 .from('profiles')
-                .insert([{
-                    id: user.id,
+                .insert({
+                    id: data.user.id,
                     business_name: businessName,
                     email: email,
                     phone: phone,
                     subdomain: subdomain,
-                }]);
+                });
 
             if (profileError) {
                 console.error('خطأ في حفظ الملف الشخصي:', profileError);
-                showToast('تم إنشاء الحساب ولكن حدث خطأ في حفظ البيانات', 'warning');
+                showToast('تم إنشاء الحساب ولكن حدث خطأ في حفظ البيانات: ' + profileError.message, 'warning');
             } else {
                 console.log('تم حفظ الملف الشخصي بنجاح');
             }
@@ -215,11 +216,11 @@ if (signupForm) {
 
             setTimeout(() => {
                 window.location.href = 'dashboard.html';
-            }, 1500);
+            }, 2000);
 
         } catch (error) {
             console.error('خطأ غير متوقع:', error);
-            showToast(`خطأ: ${error.message}`, 'error');
+            showToast(error.message || 'حدث خطأ غير متوقع', 'error');
             btnText.style.display = 'inline-flex';
             btnLoader.style.display = 'none';
             signupBtn.disabled = false;
@@ -272,7 +273,7 @@ if (loginForm) {
 
             if (error) {
                 console.error('خطأ في تسجيل الدخول:', error);
-                showToast(`خطأ: ${error.message}`, 'error');
+                showToast(error.message, 'error');
                 btnText.style.display = 'inline-flex';
                 btnLoader.style.display = 'none';
                 loginBtn.disabled = false;
@@ -289,7 +290,7 @@ if (loginForm) {
 
         } catch (error) {
             console.error('خطأ غير متوقع:', error);
-            showToast(`خطأ: ${error.message}`, 'error');
+            showToast(error.message || 'حدث خطأ غير متوقع', 'error');
             btnText.style.display = 'inline-flex';
             btnLoader.style.display = 'none';
             loginBtn.disabled = false;
@@ -298,16 +299,16 @@ if (loginForm) {
 }
 
 function toggleForms() {
-    const signupForm = document.getElementById('signupForm');
-    const loginForm = document.getElementById('loginForm');
+    const signupFormEl = document.getElementById('signupForm');
+    const loginFormEl = document.getElementById('loginForm');
     const authTitle = document.getElementById('authTitle');
     const authSubtitle = document.getElementById('authSubtitle');
 
-    if (signupForm && loginForm) {
-        signupForm.classList.toggle('hidden');
-        loginForm.classList.toggle('hidden');
+    if (signupFormEl && loginFormEl) {
+        signupFormEl.classList.toggle('hidden');
+        loginFormEl.classList.toggle('hidden');
 
-        if (signupForm.classList.contains('hidden')) {
+        if (signupFormEl.classList.contains('hidden')) {
             authTitle.textContent = 'تسجيل الدخول';
             authSubtitle.textContent = 'أهلاً بعودتك';
         } else {
@@ -326,9 +327,11 @@ const logoutBtn = document.getElementById('logoutBtn');
 
 if (sidebarToggle && sidebar) {
     sidebarToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
-    sidebar.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', () => sidebar.classList.remove('open'));
-    });
+    if (sidebar.querySelectorAll) {
+        sidebar.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => sidebar.classList.remove('open'));
+        });
+    }
 }
 
 if (logoutBtn) {
@@ -368,26 +371,22 @@ async function loadDashboardData() {
     }
 
     try {
-        // جلب بيانات الملف الشخصي
         const { data: profile } = await supabase
             .from('profiles')
             .select('business_name')
             .eq('id', user.id)
             .single();
 
-        // جلب إجمالي المبيعات
         const { data: sales } = await supabase
             .from('sales')
             .select('amount')
             .eq('user_id', user.id);
 
-        // جلب عدد العملاء
         const { count: customerCount } = await supabase
             .from('customers')
             .select('*', { count: 'exact', head: true })
             .eq('user_id', user.id);
 
-        // جلب عدد المنتجات
         const { count: productCount } = await supabase
             .from('products')
             .select('*', { count: 'exact', head: true })
@@ -405,6 +404,8 @@ async function loadDashboardData() {
 
     } catch (error) {
         console.error('خطأ في تحميل البيانات:', error);
+        // عرض بيانات تجريبية إذا لم تكن الجداول موجودة
+        displayDemoData();
     }
 }
 
@@ -418,6 +419,7 @@ function displayDashboardData(data) {
     }
 
     const totalSales = data.salesData.reduce((sum, sale) => sum + (sale.amount || 0), 0);
+
     const totalSalesElement = document.getElementById('totalSales');
     const totalCustomersElement = document.getElementById('totalCustomers');
     const totalProductsElement = document.getElementById('totalProducts');
@@ -427,6 +429,18 @@ function displayDashboardData(data) {
     if (totalCustomersElement) totalCustomersElement.textContent = data.customerCount;
     if (totalProductsElement) totalProductsElement.textContent = data.productCount;
     if (totalProfitElement) totalProfitElement.textContent = `${(totalSales * 0.3).toLocaleString('ar-EG')} ر.س`;
+}
+
+function displayDemoData() {
+    const userNameElement = document.getElementById('userName');
+    const userInitialElement = document.getElementById('userInitial');
+    if (userNameElement) userNameElement.textContent = 'مرحباً بك';
+    if (userInitialElement) userInitialElement.textContent = 'M';
+
+    document.getElementById('totalSales').textContent = '0 ر.س';
+    document.getElementById('totalCustomers').textContent = '0';
+    document.getElementById('totalProducts').textContent = '0';
+    document.getElementById('totalProfit').textContent = '0 ر.س';
 }
 
 // تشغيل لوحة التحكم
